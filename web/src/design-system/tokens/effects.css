@@ -1,0 +1,29 @@
+:root{
+--radius-xs:4px;
+--radius-s:6px;
+--radius-m:10px;
+--radius-l:14px;
+--radius-xl:20px;
+--radius-pill:999px;
+--radius-poster:var(--radius-m);
+--radius-control:var(--radius-s);
+--radius-card:var(--radius-l);
+
+--border-1:1px solid var(--border-hairline);
+
+--shadow-1:0 1px 2px rgba(0,0,0,.4);
+--shadow-2:0 8px 24px -8px rgba(0,0,0,.6);
+--shadow-3:0 24px 64px -16px rgba(0,0,0,.75);
+--shadow-focus:0 0 0 2px var(--bg-canvas),0 0 0 4px var(--focus-ring);/* @kind shadow */
+--glow-gold:0 0 0 1px rgba(242,179,61,.5),0 8px 28px -6px rgba(242,179,61,.35);/* @kind shadow */
+
+--blur-nav:saturate(140%) blur(16px);/* @kind other */
+
+--ease-out:cubic-bezier(.2,.8,.2,1);/* @kind other */
+--ease-in-out:cubic-bezier(.6,0,.2,1);/* @kind other */
+--dur-fast:120ms;/* @kind other */
+--dur-base:200ms;/* @kind other */
+--dur-slow:320ms;/* @kind other */
+--hover-lift:translateY(-4px) scale(1.03);/* @kind other */
+--press-scale:scale(.97);/* @kind other */
+}

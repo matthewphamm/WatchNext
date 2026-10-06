@@ -1,0 +1,27 @@
+:root{
+--space-0:0;
+--space-1:4px;
+--space-2:8px;
+--space-3:12px;
+--space-4:16px;
+--space-5:20px;
+--space-6:24px;
+--space-8:32px;
+--space-10:40px;
+--space-12:48px;
+--space-16:64px;
+--space-20:80px;
+--gutter-page:48px;
+--gutter-page-mobile:16px;
+--gap-poster-row:16px;
+--content-max:1440px;
+--nav-height:64px;
+--poster-w-s:140px;
+--poster-w-m:180px;
+--poster-w-l:220px;
+--poster-ratio:2/3;/* @kind other */
+--backdrop-ratio:16/9;/* @kind other */
+--control-h-s:32px;
+--control-h-m:40px;
+--control-h-l:48px;
+}

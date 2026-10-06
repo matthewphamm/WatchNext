@@ -106,6 +106,15 @@ python -m app
 ```
 Then open `http://localhost:5000`.
 
+### Run the web frontend
+The React frontend lives in `web/` and is built from the WatchNext design system (`web/src/design-system/`).
+```bash
+cd web
+npm install
+npm run dev
+```
+Then open `http://localhost:5173`.
+
 ## Results
 
 | Metric        | Content-based | Collaborative | Hybrid |
