@@ -88,7 +88,7 @@ WatchNext/
 
 ### Installation
 ```bash
-git clone https://github.com/<your-username>/WatchNext.git
+git clone https://github.com/matthewphamm/WatchNext.git
 cd WatchNext
 python -m venv venv
 source venv/bin/activate
