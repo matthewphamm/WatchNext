@@ -15,14 +15,15 @@ from pathlib import Path
 
 import httpx
 
+from .paths import POSTER_CACHE_PATH
+
 API_URL = "https://api.themoviedb.org/3/movie/{}"
 IMAGE_URL = "https://image.tmdb.org/t/p/{}{}"
-CACHE_PATH = Path(__file__).resolve().parent.parent / "data" / "posters.json"
 NO_ART = {"poster": "", "backdrop": ""}  # cached when TMDB has nothing, so we don't ask again
 
 
 class PosterService:
-    def __init__(self, api_key=None, access_token=None, cache_path=CACHE_PATH,
+    def __init__(self, api_key=None, access_token=None, cache_path=POSTER_CACHE_PATH,
                  transport=None, workers=8, timeout=5.0):
         self.api_key = api_key if api_key is not None else os.environ.get("TMDB_API_KEY")
         self.access_token = (access_token if access_token is not None

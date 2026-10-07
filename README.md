@@ -2,7 +2,7 @@
 
 A movie recommendation web app that suggests what to watch next based on your ratings. Built with Python, Scikit-learn, FastAPI and React.
 
-> **Live demo:** _coming soon_ · **Author:** Matthew Pham
+> **Live demo:** [watchnext-navy.vercel.app](https://watchnext-navy.vercel.app) · **Author:** Matthew Pham
 
 ---
 
@@ -63,6 +63,7 @@ match %   = predicted / 5
 | Frontend       | React, Vite, WatchNext design system        |
 | Movie art      | TMDB API (posters, backdrops)               |
 | Testing        | pytest                                      |
+| Hosting        | Vercel (Services: Vite site + FastAPI)      |
 
 ## Project Structure
 
@@ -126,6 +127,14 @@ cd backend
 python -m pytest
 python -m watchnext.evaluate
 ```
+
+## Deployment
+
+WatchNext deploys to [Vercel](https://vercel.com) as one project using [Services](https://vercel.com/docs/services) (see `vercel.json`): the Vite site from `web/` and the FastAPI backend from `backend/`, with `/api/*` routed to the backend. Every push to `main` deploys to production.
+
+- The MovieLens dataset is committed under `backend/data/ml-latest-small/` (its license allows redistribution with its README).
+- Vercel's filesystem is read-only apart from `/tmp`, so the backend trains its model there on startup (under a second) and caches poster lookups there (see `backend/watchnext/paths.py`).
+- Add `TMDB_API_KEY` under the project's **Settings → Environment Variables** to show posters and backdrops.
 
 ## Results
 

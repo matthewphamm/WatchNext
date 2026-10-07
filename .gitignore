@@ -2,6 +2,11 @@
 __pycache__/
 *.pyc
 .pytest_cache/
-backend/data/
+# Keep the MovieLens dataset (its license allows redistribution with README.txt);
+# ignore the poster cache and anything else generated there.
+backend/data/*
+!backend/data/ml-latest-small/
 backend/models/
 backend/.env
+.vercel
+.env*.local

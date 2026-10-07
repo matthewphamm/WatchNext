@@ -6,7 +6,6 @@ them with each request, and the model folds them in on the fly.
 Run: uvicorn watchnext.api:app --reload
 """
 from contextlib import asynccontextmanager
-from pathlib import Path
 from typing import Literal
 
 import numpy as np
@@ -16,11 +15,12 @@ from pydantic import BaseModel, Field
 
 from .posters import PosterService
 from .recommender import Recommender
-from .train import MODEL_PATH, train
+from .paths import BACKEND_DIR, MODEL_PATH
+from .train import train
 
 ROW_SIZE = 20
 
-load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+load_dotenv(BACKEND_DIR / ".env")  # local development; on Vercel, set env vars in the project
 
 
 def load_model():

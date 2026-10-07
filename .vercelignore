@@ -1,0 +1,13 @@
+# Local environments, secrets and generated files: never upload these.
+**/.env
+**/.venv/
+**/node_modules/
+**/__pycache__/
+**/.pytest_cache/
+web/dist/
+backend/models/
+backend/data/posters.json
+backend/tests/
+.claude/
+**/.env.local
+**/.env*.local
