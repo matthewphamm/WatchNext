@@ -1,12 +1,12 @@
 import React,{useState} from 'react';
 import {Button,Tag,StarRating,MovieCard} from '../design-system/index.js';
-import {MOVIES} from '../data.js';
+import {api,useApi,GENRES} from '../api.js';
+import {ErrorState} from './Status.jsx';
 
 export function RateScreen({ctx}){
-  const G=['Sci-Fi','Drama','Thriller','Comedy','Romance'];
   const [g,setG]=useState(new Set());
-  const list=MOVIES.filter(m=>!g.size||g.has(m.genre)).slice(0,10);
-  const n=Object.values(ctx.ratings).filter(Boolean).length;const goal=5;
+  const {data,error,retry}=useApi(()=>api.onboarding([...g]),[g]);
+  const n=Object.keys(ctx.ratings).length;const goal=5;
   return <div style={{maxWidth:1200,margin:'0 auto',padding:'48px 48px 80px'}}>
     <div style={{display:'flex',alignItems:'flex-end',gap:24}}>
       <div style={{flex:1}}>
@@ -20,10 +20,11 @@ export function RateScreen({ctx}){
         <Button fullWidth size="l" disabled={n<goal} iconRight="arrow-right" style={{marginTop:14}} onClick={()=>ctx.go('home')}>See my picks</Button>
       </div>
     </div>
-    <div style={{display:'flex',gap:8,marginTop:32,flexWrap:'wrap'}}>{G.map(x=><Tag key={x} selected={g.has(x)} onClick={()=>setG(s=>{const t=new Set(s);t.has(x)?t.delete(x):t.add(x);return t;})}>{x}</Tag>)}</div>
-    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:'28px 16px',marginTop:28}}>
-      {list.map(m=><div key={m.id}><MovieCard width="100%" title={m.title} year={m.year} meta={m.genre}/>
-        <div style={{marginTop:8}}><StarRating value={ctx.ratings[m.id]||0} onChange={v=>ctx.rate(m.id,v,true)} size={20}/></div></div>)}
-    </div>
+    <div style={{display:'flex',gap:8,marginTop:32,flexWrap:'wrap'}}>{GENRES.map(x=><Tag key={x} selected={g.has(x)} onClick={()=>setG(s=>{const t=new Set(s);t.has(x)?t.delete(x):t.add(x);return t;})}>{x}</Tag>)}</div>
+    {error&&!data?<ErrorState message="Couldn't load movies to rate." onRetry={retry}/>
+      :<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:'28px 16px',marginTop:28,opacity:data?1:.4}}>
+      {(data||[]).map(m=><div key={m.id}><MovieCard width="100%" title={m.title} year={m.year} meta={m.genres[0]}/>
+        <div style={{marginTop:8}}><StarRating value={ctx.ratings[m.id]||0} onChange={v=>ctx.rate(m,v,true)} size={20}/></div></div>)}
+    </div>}
   </div>;
 }

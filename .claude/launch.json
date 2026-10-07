@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "web", "run", "dev", "--", "--port", "5173", "--strictPort"],
       "port": 5173
+    },
+    {
+      "name": "api",
+      "runtimeExecutable": "backend/.venv/bin/uvicorn",
+      "runtimeArgs": ["watchnext.api:app", "--app-dir", "backend", "--port", "8000", "--reload", "--reload-dir", "backend/watchnext"],
+      "port": 8000
     }
   ]
 }
