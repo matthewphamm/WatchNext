@@ -9,7 +9,7 @@ export function PosterRow({eyebrow,title,movies,ctx,size='m'}){
       <h2 style={{margin:0,font:'700 22px/1.2 var(--font-display)',letterSpacing:'-0.01em'}}>{title}</h2></div>
     </div>
     <div style={{display:'flex',gap:16,overflowX:'auto',padding:'6px 48px 10px',scrollbarWidth:'none'}}>
-      {movies.map(m=><MovieCard key={m.id} size={size} title={m.title} year={m.year} meta={m.genres[0]} match={m.match} userRating={ctx.ratings[m.id]} saved={ctx.saved.has(m.id)} onSave={()=>ctx.toggleSave(m.id)} onClick={()=>ctx.open(m.id)}/>)}
+      {movies.map(m=><MovieCard key={m.id} size={size} posterUrl={m.poster} title={m.title} year={m.year} meta={m.genres[0]} match={m.match} userRating={ctx.ratings[m.id]} saved={ctx.saved.has(m.id)} onSave={()=>ctx.toggleSave(m.id)} onClick={()=>ctx.open(m.id)}/>)}
     </div>
   </section>;
 }

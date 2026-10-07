@@ -23,6 +23,7 @@ A hybrid score blends both, so new users get useful suggestions right away and r
 - 🧊 **Cold-start handling:** new visitors rate a few well-known movies (filterable by genre) to get started
 - 💬 **Explainable results**, e.g. "You rated *Inception* 4.5 stars" or "People with your taste rated it highly"
 - 🔖 **Search, watchlist and "Not for me"** to filter, save and hide movies
+- 🖼️ **Posters and backdrops** from the TMDB API, fetched on demand and cached
 
 ## How It Works
 
@@ -60,6 +61,7 @@ match %   = predicted / 5
 | ML / Data      | Python, Scikit-learn, Pandas, NumPy, SciPy  |
 | Backend / API  | FastAPI, Uvicorn                            |
 | Frontend       | React, Vite, WatchNext design system        |
+| Movie art      | TMDB API (posters, backdrops)               |
 | Testing        | pytest                                      |
 
 ## Project Structure
@@ -73,6 +75,7 @@ WatchNext/
 │   │   ├── recommender.py        # Baseline, TruncatedSVD, TF-IDF and hybrid model
 │   │   ├── train.py              # Fit and save models/recommender.joblib
 │   │   ├── evaluate.py           # RMSE, Precision@K, Recall@K
+│   │   ├── posters.py            # TMDB poster/backdrop lookup with an on-disk cache
 │   │   └── api.py                # FastAPI endpoints
 │   ├── tests/
 │   └── requirements.txt
@@ -101,9 +104,12 @@ source .venv/bin/activate
 pip install -r requirements.txt
 python scripts/download_data.py
 python -m watchnext.train
+cp .env.example .env   # optional: add a TMDB key for posters and backdrops
 uvicorn watchnext.api:app --port 8000
 ```
 Training takes under a second. The API also trains on first start if no saved model exists.
+
+**Posters and backdrops (optional):** get a free API key at [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api) and put it in `backend/.env` as `TMDB_API_KEY` (or the longer read access token as `TMDB_READ_ACCESS_TOKEN`). Restart the API. Posters and backdrops are looked up only for the movies being shown and cached in `backend/data/posters.json`, so each movie is fetched once. Without a key, cards and headers show a placeholder.
 
 ### Frontend
 In a second terminal:
@@ -136,7 +142,6 @@ The hybrid gives the best top-10 lists. Content-based alone predicts individual 
 
 ## Roadmap
 
-- [ ] Poster and backdrop art from the TMDB API
 - [ ] User accounts so ratings and watchlists sync across devices
 - [ ] Implicit feedback (clicks, watch time) alongside explicit ratings
 - [ ] Recommendation diversity and serendipity tuning
@@ -154,6 +159,7 @@ The hybrid gives the best top-10 lists. Content-based alone predicts individual 
 ## Acknowledgments
 
 - [MovieLens](https://grouplens.org/datasets/movielens/) by GroupLens Research
+- Poster and backdrop art from [TMDB](https://www.themoviedb.org/). This product uses the TMDB API but is not endorsed or certified by TMDB.
 
 ## License
 

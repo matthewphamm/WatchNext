@@ -43,6 +43,9 @@ export function App(){
     {current==='rate'&&<RateScreen ctx={ctx}/>}
     {current==='search'&&<SearchScreen ctx={ctx}/>}
     {current==='watchlist'&&<SearchScreen ctx={ctx} mode="watchlist"/>}
+    <footer style={{padding:'24px 48px 40px',borderTop:'1px solid var(--border-hairline)',font:'400 12px/1.5 var(--font-body)',color:'var(--text-secondary)'}}>
+      Ratings from <a href="https://grouplens.org/datasets/movielens/" target="_blank" rel="noopener" style={{color:'inherit',textDecoration:'underline'}}>MovieLens</a>. Posters from <a href="https://www.themoviedb.org/" target="_blank" rel="noopener" style={{color:'inherit',textDecoration:'underline'}}>TMDB</a>. This product uses the TMDB API but is not endorsed or certified by TMDB.
+    </footer>
     <Dialog open={!!ask} onClose={()=>setAsk(null)} width={420} title={ask?'How was '+ask.title+'?':''}
       actions={<><Button variant="ghost" onClick={()=>setAsk(null)}>Skip</Button><Button disabled={!askVal} onClick={()=>{ctx.rate(ask,askVal);setAsk(null);}}>Save rating</Button></>}>
       <div style={{marginBottom:14}}>Your rating tunes tonight's picks.</div><StarRating value={askVal} onChange={setAskVal} size={34}/>

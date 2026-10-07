@@ -2,14 +2,14 @@ import React,{useState} from 'react';
 import {Button,Badge,Card,Tabs,Tooltip} from '../design-system/index.js';
 import {api,useApi,trailerUrl} from '../api.js';
 import {PosterRow} from './PosterRow.jsx';
-import {ErrorState,PosterSkeleton} from './Status.jsx';
+import {Backdrop,ErrorState,PosterSkeleton} from './Status.jsx';
 
 const TABS={'For you':'for_you','Popular':'popular','Newest':'newest'};
 
 function Hero({m,ctx}){
   const n=Object.keys(ctx.ratings).length;const saved=ctx.saved.has(m.id);
   return <section style={{position:'relative',height:460,margin:'0',overflow:'hidden',borderBottom:'1px solid var(--border-hairline)',background:'var(--surface-card)'}}>
-    <div style={{position:'absolute',right:48,top:40,font:'500 11px/1 var(--font-mono)',color:'var(--text-disabled)'}}>backdrop image · 16:9</div>
+    <Backdrop src={m.backdrop}/>
     <div style={{position:'absolute',inset:0,background:'var(--hero-protection)'}}></div>
     <div style={{position:'relative',height:'100%',display:'flex',flexDirection:'column',justifyContent:'flex-end',padding:'0 48px 48px',maxWidth:720}}>
       <div style={{font:'600 11px/1 var(--font-body)',letterSpacing:'.12em',textTransform:'uppercase',color:'var(--accent)'}}>Your top match tonight</div>

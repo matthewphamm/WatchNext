@@ -2,7 +2,7 @@ import React from 'react';
 import {Button,IconButton,Icon,Card,Badge,StarRating,MovieCard,Tag} from '../design-system/index.js';
 import {api,useApi,trailerUrl} from '../api.js';
 import {PosterRow} from './PosterRow.jsx';
-import {ErrorState} from './Status.jsx';
+import {Backdrop,ErrorState} from './Status.jsx';
 
 const REASON_ICONS={similar:['star','fill','var(--accent)'],people:['users','regular','var(--text-secondary)'],genre:['film-slate','regular','var(--text-secondary)'],stats:['chart-bar','regular','var(--text-secondary)']};
 
@@ -12,13 +12,13 @@ export function DetailScreen({id,ctx}){
   if(!data) return <section style={{height:300,background:'var(--surface-card)',borderBottom:'1px solid var(--border-hairline)'}}/>;
   const m=data.movie;const r=ctx.ratings[id]||0;const saved=ctx.saved.has(id);
   return <div>
-    <section style={{position:'relative',height:300,background:'var(--surface-card)',borderBottom:'1px solid var(--border-hairline)'}}>
-      <div style={{position:'absolute',right:48,top:24,font:'500 11px/1 var(--font-mono)',color:'var(--text-disabled)'}}>backdrop image · 16:9</div>
+    <section style={{position:'relative',height:300,background:'var(--surface-card)',borderBottom:m.backdrop?'none':'1px solid var(--border-hairline)'}}>
+      <Backdrop src={m.backdrop} labelTop={24}/>
       <div style={{position:'absolute',inset:0,background:'linear-gradient(0deg,#0B0F1A 0%,rgba(11,15,26,0) 80%)'}}></div>
       <div style={{position:'absolute',left:48,top:20}}><Button variant="ghost" size="s" iconLeft="caret-left" onClick={()=>ctx.go('home')}>Back</Button></div>
     </section>
     <div style={{display:'flex',gap:40,padding:'0 48px',marginTop:-160,position:'relative'}}>
-      <MovieCard title={m.title} size="l" width={240} style={{pointerEvents:'none'}}/>
+      <MovieCard title={m.title} posterUrl={m.poster} size="l" width={240} style={{pointerEvents:'none'}}/>
       <div style={{flex:1,paddingTop:110,maxWidth:720}}>
         <div style={{display:'flex',alignItems:'center',gap:8}}><Badge variant="match">{m.match}% match</Badge>{saved&&<Badge variant="success" icon="check">On watchlist</Badge>}</div>
         <h1 style={{margin:'12px 0 0',font:'800 48px/1.05 var(--font-display)',letterSpacing:'-0.02em'}}>{m.title}</h1>

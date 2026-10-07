@@ -2,14 +2,16 @@ import pytest
 from fastapi.testclient import TestClient
 
 from watchnext.api import app
+from watchnext.posters import PosterService
 
 
 @pytest.fixture
 def client(model):
     app.state.model = model
+    app.state.posters = PosterService(api_key="", access_token="", cache_path=None)  # TMDB disabled
     with TestClient(app) as c:
         yield c
-    del app.state.model
+    del app.state.model, app.state.posters
 
 
 def test_home_personalizes(client):
@@ -47,3 +49,10 @@ def test_search_filters_and_sorts(client):
 def test_onboarding_filters_by_genre(client):
     movies = client.get("/api/onboarding", params={"genres": "Romance"}).json()
     assert {m["id"] for m in movies} == {4, 5, 6}
+
+
+def test_movies_include_poster_field(client):
+    body = client.post("/api/movies/1", json={}).json()
+    assert body["movie"]["tmdbId"] == 101
+    assert body["movie"]["poster"] is None and body["movie"]["backdrop"] is None  # no TMDB key in tests
+    assert all("poster" in m for m in body["similar"])

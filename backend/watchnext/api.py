@@ -6,26 +6,37 @@ them with each request, and the model folds them in on the fly.
 Run: uvicorn watchnext.api:app --reload
 """
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Literal
 
 import numpy as np
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from .posters import PosterService
 from .recommender import Recommender
 from .train import MODEL_PATH, train
 
 ROW_SIZE = 20
 
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+
 
 def load_model():
-    return Recommender.load(MODEL_PATH) if MODEL_PATH.exists() else train()
+    if MODEL_PATH.exists():
+        model = Recommender.load(MODEL_PATH)
+        if getattr(model, "version", None) == Recommender.VERSION:
+            return model
+    return train()
 
 
 @asynccontextmanager
 async def lifespan(app):
     if not hasattr(app.state, "model"):
         app.state.model = load_model()
+    if not hasattr(app.state, "posters"):
+        app.state.posters = PosterService()
     yield
 
 
@@ -50,8 +61,13 @@ def _model(request: Request) -> Recommender:
     return request.app.state.model
 
 
-def _cards(model, indices, preds):
-    return [model.to_dict(i, preds) for i in indices]
+def _with_posters(request, movies, size="w342"):
+    """Add TMDB poster and backdrop URLs (or None) to each movie dict, in place."""
+    art = request.app.state.posters.art([m["tmdbId"] for m in movies], poster_size=size)
+    for m in movies:
+        found = art.get(m["tmdbId"], {})
+        m["poster"], m["backdrop"] = found.get("poster"), found.get("backdrop")
+    return movies
 
 
 @app.get("/api/health")
@@ -69,6 +85,7 @@ def home(profile: Profile, request: Request):
     model = _model(request)
     ratings, exclude = profile.ratings, profile.exclude
     preds = model.predict(ratings)
+    cards = lambda idx: [model.to_dict(i, preds) for i in idx]
     top = model.recommend(ratings, n=ROW_SIZE + 1, exclude=exclude, preds=preds)
     hero, top = (top[0], top[1:]) if len(top) else (None, top)
 
@@ -78,33 +95,34 @@ def home(profile: Profile, request: Request):
         anchor = loved[0][1]
         similar = model.similar(anchor, n=ROW_SIZE, exclude=list(ratings) + exclude)
         for_you.append({"eyebrow": f"Because you loved {model.title(anchor)}",
-                        "title": "More in the same vein", "movies": _cards(model, similar, preds)})
+                        "title": "More in the same vein", "movies": cards(similar)})
     for_you.append({"eyebrow": None if ratings else "Rate a few movies to personalize these",
-                    "title": "Top matches for you", "movies": _cards(model, top, preds)})
+                    "title": "Top matches for you", "movies": cards(top)})
     fav = _favorite_genre(model, ratings)
     if fav:
         picks = model.recommend(ratings, n=ROW_SIZE, exclude=exclude, genre=fav, preds=preds)
         for_you.append({"eyebrow": f"Because you rate {fav} highly",
-                        "title": f"{fav} picks for you", "movies": _cards(model, picks, preds)})
+                        "title": f"{fav} picks for you", "movies": cards(picks)})
 
     seen = set(ratings) | set(exclude)
     most_rated = [i for i in model.popular(n=ROW_SIZE * 3) if model.ids[i] not in seen][:ROW_SIZE]
     acclaimed = model.recommend({}, n=ROW_SIZE, exclude=list(seen), min_count=50)
     newest = _newest(model, seen, ROW_SIZE)
 
-    return {
-        "hero": model.to_dict(hero, preds) if hero is not None else None,
-        "rows": {
-            "for_you": for_you,
-            "popular": [
-                {"eyebrow": None, "title": "Most rated on MovieLens", "movies": _cards(model, most_rated, preds)},
-                {"eyebrow": None, "title": "Highest rated, at least 50 ratings", "movies": _cards(model, acclaimed, preds)},
-            ],
-            "newest": [
-                {"eyebrow": None, "title": "Newest in the catalog", "movies": _cards(model, newest, preds)},
-            ],
-        },
+    rows = {
+        "for_you": for_you,
+        "popular": [
+            {"eyebrow": None, "title": "Most rated on MovieLens", "movies": cards(most_rated)},
+            {"eyebrow": None, "title": "Highest rated, at least 50 ratings", "movies": cards(acclaimed)},
+        ],
+        "newest": [
+            {"eyebrow": None, "title": "Newest in the catalog", "movies": cards(newest)},
+        ],
     }
+    hero = model.to_dict(hero, preds) if hero is not None else None
+    _with_posters(request, [m for group in rows.values() for row in group for m in row["movies"]]
+                  + ([hero] if hero else []))
+    return {"hero": hero, "rows": rows}
 
 
 @app.post("/api/movies/{movie_id}")
@@ -113,12 +131,11 @@ def movie(movie_id: int, profile: Profile, request: Request):
     if movie_id not in model.index:
         raise HTTPException(404, "Movie not found")
     preds = model.predict(profile.ratings)
-    similar = model.similar(movie_id, n=12, exclude=profile.exclude)
-    return {
-        "movie": model.to_dict(model.index[movie_id], preds),
-        "reasons": model.explain(movie_id, profile.ratings),
-        "similar": _cards(model, similar, preds),
-    }
+    similar = [model.to_dict(i, preds) for i in model.similar(movie_id, n=12, exclude=profile.exclude)]
+    detail = model.to_dict(model.index[movie_id], preds)
+    _with_posters(request, [detail], size="w500")
+    _with_posters(request, similar)
+    return {"movie": detail, "reasons": model.explain(movie_id, profile.ratings), "similar": similar}
 
 
 @app.post("/api/search")
@@ -146,7 +163,8 @@ def search(query: SearchQuery, request: Request):
     else:
         key = -model.movies["year"].fillna(0).to_numpy(dtype=float)[idx]
     order = idx[np.lexsort((-model.counts[idx], key))]
-    return {"total": int(len(idx)), "movies": _cards(model, order[:query.limit], preds)}
+    movies = _with_posters(request, [model.to_dict(i, preds) for i in order[:query.limit]])
+    return {"total": int(len(idx)), "movies": movies}
 
 
 @app.get("/api/onboarding")
@@ -154,7 +172,7 @@ def onboarding(request: Request, genres: str = "", limit: int = 20):
     """Well-known movies to rate first: the most rated, optionally within genres."""
     model = _model(request)
     wanted = [g for g in genres.split(",") if g]
-    return [model.to_dict(i) for i in model.popular(n=min(limit, 100), genres=wanted)]
+    return _with_posters(request, [model.to_dict(i) for i in model.popular(n=min(limit, 100), genres=wanted)])
 
 
 def _favorite_genre(model, ratings):

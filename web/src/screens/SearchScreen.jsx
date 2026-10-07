@@ -26,7 +26,7 @@ export function SearchScreen({ctx,mode}){
     {error&&!data?<ErrorState message="Couldn't load movies." onRetry={retry}/>:<>
     <div style={{marginTop:20,font:'500 12px/1 var(--font-mono)',color:'var(--text-secondary)'}}>{data?(data.total>list.length?'Showing '+list.length+' of '+data.total.toLocaleString()+' movies':data.total+' '+(data.total===1?'movie':'movies')):' '}</div>
     {list.length||!data?<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))',gap:'28px 16px',marginTop:16}}>
-      {list.map(m=><MovieCard key={m.id} width="100%" title={m.title} year={m.year} meta={m.genres[0]} match={m.match} userRating={ctx.ratings[m.id]} saved={ctx.saved.has(m.id)} onSave={()=>ctx.toggleSave(m.id)} onClick={()=>ctx.open(m.id)}/>)}
+      {list.map(m=><MovieCard key={m.id} width="100%" posterUrl={m.poster} title={m.title} year={m.year} meta={m.genres[0]} match={m.match} userRating={ctx.ratings[m.id]} saved={ctx.saved.has(m.id)} onSave={()=>ctx.toggleSave(m.id)} onClick={()=>ctx.open(m.id)}/>)}
     </div>:<div style={{marginTop:48,textAlign:'center',color:'var(--text-secondary)'}}>
       <Icon name={watchlist?'bookmark-simple':'film-slate'} size={32}/>
       <div style={{marginTop:12,font:'700 20px/1.2 var(--font-display)',color:'var(--text-primary)'}}>{watchlist?'Nothing saved yet':'No matches'}</div>

@@ -26,7 +26,7 @@ def clean_title(raw):
 def load_movielens(data_dir=DATA_DIR):
     """Return (movies, ratings, tags) DataFrames.
 
-    movies:  movieId, title, year, genres (list of str)
+    movies:  movieId, title, year, genres (list of str), tmdbId (nullable)
     ratings: userId, movieId, rating
     tags:    movieId, tag (lowercased, stripped)
     """
@@ -44,10 +44,14 @@ def load_movielens(data_dir=DATA_DIR):
         lambda g: [] if g == "(no genres listed)" else g.split("|")
     )
 
+    links = pd.read_csv(data_dir / "links.csv", usecols=["movieId", "tmdbId"])
+    movies = movies.merge(links, on="movieId", how="left")
+    movies["tmdbId"] = movies["tmdbId"].astype("Int64")
+
     ratings = pd.read_csv(data_dir / "ratings.csv", usecols=["userId", "movieId", "rating"])
 
     tags = pd.read_csv(data_dir / "tags.csv", usecols=["movieId", "tag"])
     tags["tag"] = tags["tag"].astype(str).str.strip().str.lower()
     tags = tags[tags["tag"] != ""]
 
-    return movies[["movieId", "title", "year", "genres"]], ratings, tags
+    return movies[["movieId", "title", "year", "genres", "tmdbId"]], ratings, tags

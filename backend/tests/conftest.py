@@ -9,6 +9,7 @@ MOVIES = pd.DataFrame({
     "title": ["Space One", "Space Two", "Space Three", "Love One", "Love Two", "Love Three"],
     "year": pd.array([2001, 2005, 2010, 2002, 2006, 2011], dtype="Int64"),
     "genres": [["Sci-Fi"], ["Sci-Fi"], ["Sci-Fi", "Thriller"], ["Romance"], ["Romance"], ["Romance", "Drama"]],
+    "tmdbId": pd.array([101, 102, 103, 104, 105, None], dtype="Int64"),
 })
 TAGS = pd.DataFrame({"movieId": [1, 2, 3, 4, 5], "tag": ["aliens", "aliens", "space", "wedding", "wedding"]})
 

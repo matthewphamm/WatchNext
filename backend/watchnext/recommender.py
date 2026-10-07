@@ -34,6 +34,9 @@ def _token(prefix, text):
 
 
 class Recommender:
+    # Bump when fit() stores new attributes, so stale saved models are retrained.
+    VERSION = 2
+
     def __init__(self, n_components=50, item_shrink=10.0, user_shrink=5.0,
                  content_neighbors=20, content_shrink=0.5, random_state=0):
         self.n_components = n_components
@@ -46,6 +49,7 @@ class Recommender:
     # ------------------------------------------------------------------ fitting
 
     def fit(self, movies, ratings, tags=None):
+        self.version = self.VERSION
         movies = movies.reset_index(drop=True)
         self.movies = movies
         self.ids = movies["movieId"].to_numpy()
@@ -223,8 +227,10 @@ class Recommender:
     def to_dict(self, i, preds=None):
         row = self.movies.iloc[i]
         year = row["year"]
+        tmdb = row.get("tmdbId")
         out = {
             "id": int(self.ids[i]),
+            "tmdbId": None if pd.isna(tmdb) else int(tmdb),
             "title": row["title"],
             "year": None if pd.isna(year) else int(year),
             "genres": list(row["genres"]),

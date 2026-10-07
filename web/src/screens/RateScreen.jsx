@@ -23,7 +23,7 @@ export function RateScreen({ctx}){
     <div style={{display:'flex',gap:8,marginTop:32,flexWrap:'wrap'}}>{GENRES.map(x=><Tag key={x} selected={g.has(x)} onClick={()=>setG(s=>{const t=new Set(s);t.has(x)?t.delete(x):t.add(x);return t;})}>{x}</Tag>)}</div>
     {error&&!data?<ErrorState message="Couldn't load movies to rate." onRetry={retry}/>
       :<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:'28px 16px',marginTop:28,opacity:data?1:.4}}>
-      {(data||[]).map(m=><div key={m.id}><MovieCard width="100%" title={m.title} year={m.year} meta={m.genres[0]}/>
+      {(data||[]).map(m=><div key={m.id}><MovieCard width="100%" posterUrl={m.poster} title={m.title} year={m.year} meta={m.genres[0]}/>
         <div style={{marginTop:8}}><StarRating value={ctx.ratings[m.id]||0} onChange={v=>ctx.rate(m,v,true)} size={20}/></div></div>)}
     </div>}
   </div>;
