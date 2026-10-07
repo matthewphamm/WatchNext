@@ -22,7 +22,7 @@ function Hero({m,ctx}){
       <div style={{display:'flex',gap:10,marginTop:24}}>
         <Button size="l" iconLeft="play" onClick={()=>window.open(trailerUrl(m),'_blank','noopener')}>Watch trailer</Button>
         <Button size="l" variant="secondary" iconLeft={saved?'check':'plus'} onClick={()=>ctx.toggleSave(m.id)}>{saved?'On watchlist':'Watchlist'}</Button>
-        <Button size="l" variant="ghost" iconLeft="info" onClick={()=>ctx.open(m.id)}>Details</Button>
+        <Button size="l" variant="ghost" iconLeft="info" onClick={()=>ctx.open(m)}>Details</Button>
       </div>
     </div>
   </section>;

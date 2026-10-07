@@ -4,10 +4,10 @@ import {Badge} from './Badge.jsx';
 import {StarRating} from './StarRating.jsx';
 const W={s:140,m:180,l:220};
 export function MovieCard({title,year,meta,posterUrl,match,userRating,saved,onSave,onClick,size='m',width,style}){
-  const [h,setH]=useState(false);const w=width||W[size]||180;
-  return <div onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)} onClick={onClick} style={{width:w,flex:'none',cursor:onClick?'pointer':'default',...style}}>
-    <div style={{position:'relative',aspectRatio:'2/3',borderRadius:'var(--radius-poster)',overflow:'hidden',background:'var(--surface-raised)',border:'1px solid var(--border-hairline)',transform:h?'translateY(-4px)':'none',boxShadow:h?'var(--shadow-3)':'var(--shadow-1)',outline:h?'1px solid rgba(242,179,61,.5)':'none',transition:'transform var(--dur-base) var(--ease-out),box-shadow var(--dur-base) var(--ease-out)'}}>
-      {posterUrl?<img src={posterUrl} alt={title} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
+  const [h,setH]=useState(false);const [p,setP]=useState(false);const [loaded,setLoaded]=useState(null);const w=width||W[size]||180;
+  return <div onMouseEnter={()=>setH(true)} onMouseLeave={()=>{setH(false);setP(false)}} onMouseDown={()=>onClick&&setP(true)} onMouseUp={()=>setP(false)} onClick={onClick} style={{width:w,flex:'none',cursor:onClick?'pointer':'default',...style}}>
+    <div style={{position:'relative',aspectRatio:'2/3',borderRadius:'var(--radius-poster)',overflow:'hidden',background:'var(--surface-raised)',border:'1px solid var(--border-hairline)',transform:(h?'translateY(-4px)':'')+(p?' scale(.97)':'')||'none',boxShadow:h?'var(--shadow-3)':'var(--shadow-1)',outline:h?'1px solid rgba(242,179,61,.5)':'none',transition:'transform var(--dur-base) var(--ease-out),box-shadow var(--dur-base) var(--ease-out)'}}>
+      {posterUrl?<img src={posterUrl} alt={title} onLoad={()=>setLoaded(posterUrl)} style={{width:'100%',height:'100%',objectFit:'cover',display:'block',opacity:loaded===posterUrl?1:0,transition:'opacity var(--dur-base) var(--ease-out)'}}/>
         :<div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,padding:16,color:'var(--text-disabled)',textAlign:'center'}}><Icon name="film-slate" size={28}/><span style={{font:'700 15px/1.15 var(--font-display)',color:'var(--text-secondary)',textWrap:'balance'}}>{title}</span></div>}
       <div style={{position:'absolute',inset:0,background:'var(--poster-protection)',opacity:h?1:0,transition:'opacity var(--dur-base)'}}/>
       {match!=null&&<Badge variant="match" style={{position:'absolute',top:8,left:8}}>{match}%</Badge>}

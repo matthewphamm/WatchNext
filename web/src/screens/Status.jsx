@@ -1,4 +1,4 @@
-import React from 'react';
+import React,{useState} from 'react';
 import {Button,Icon} from '../design-system/index.js';
 
 export function ErrorState({message="Couldn't load picks.",onRetry}){
@@ -21,6 +21,7 @@ export function PosterSkeleton({count=8,width=180}){
 
 /** Full-bleed TMDB backdrop, or the design's labelled placeholder when there is none. */
 export function Backdrop({src,labelTop=40}){
-  if(src) return <img src={src} alt="" style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',objectPosition:'center 25%'}}/>;
+  const [loaded,setLoaded]=useState(null);
+  if(src) return <img src={src} alt="" onLoad={()=>setLoaded(src)} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',objectPosition:'center 25%',opacity:loaded===src?1:0,transition:'opacity var(--dur-slow) var(--ease-out)'}}/>;
   return <div style={{position:'absolute',right:48,top:labelTop,font:'500 11px/1 var(--font-mono)',color:'var(--text-disabled)'}}>backdrop image · 16:9</div>;
 }

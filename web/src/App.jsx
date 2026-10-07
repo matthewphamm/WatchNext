@@ -5,6 +5,7 @@ import {HomeScreen} from './screens/HomeScreen.jsx';
 import {DetailScreen} from './screens/DetailScreen.jsx';
 import {RateScreen} from './screens/RateScreen.jsx';
 import {SearchScreen} from './screens/SearchScreen.jsx';
+import {navigate} from './transitions.js';
 
 // Ratings, watchlist and dismissed movies live in this browser and are sent with each API request.
 const load=(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch{return d}};
@@ -17,6 +18,7 @@ export function App(){
   const [ratings,setRatings]=useState(()=>load('wn-ratings',{}));
   const [saved,setSaved]=useState(()=>new Set(load('wn-saved',[])));
   const [dismissed,setDismissed]=useState(()=>new Set(load('wn-dismissed',[])));
+  const [preview,setPreview]=useState(null);  // card data for the movie being opened, shown while details load
   const [toast,setToast]=useState(null);
   const [ask,setAsk]=useState(null);const [askVal,setAskVal]=useState(0);
   useEffect(()=>{save('wn-screen',screen==='detail'&&id==null?'home':screen);save('wn-id',id);},[screen,id]);
@@ -25,10 +27,11 @@ export function App(){
   useEffect(()=>save('wn-dismissed',[...dismissed]),[dismissed]);
   const tRef=useRef();
   const notify=(variant,text,undo)=>{clearTimeout(tRef.current);setToast({variant,text,undo});tRef.current=setTimeout(()=>setToast(null),3200);};
-  const go=s=>{setScreen(s);window.scrollTo(0,0);};
+  const go=s=>navigate(()=>{setScreen(s);window.scrollTo(0,0);});
   const setRating=(mid,v)=>setRatings(r=>{const t={...r};if(v)t[mid]=v;else delete t[mid];return t;});
   const ctx={ratings,saved,dismissed,go,notify,
-    open:i=>{setId(i);go('detail');},
+    // Opening from a poster passes the click event so that poster morphs into the detail poster.
+    open:(m,e)=>{setPreview(m);navigate(()=>{setId(m.id);setScreen('detail');window.scrollTo(0,0);},e?.currentTarget?.firstElementChild);},
     toggleSave:i=>{const had=saved.has(i);setSaved(s=>{const t=new Set(s);had?t.delete(i):t.add(i);return t;});notify('success',had?'Removed from your watchlist.':'Added to your watchlist.');},
     rate:(m,v,quiet)=>{const prev=ratings[m.id];setRating(m.id,v);if(!quiet&&v)notify('rating','Rated '+m.title+' '+stars(v),()=>setRating(m.id,prev));},
     dismiss:m=>{setDismissed(s=>new Set(s).add(m.id));notify('info',"Got it. We won't suggest "+m.title+' again.',()=>setDismissed(s=>{const t=new Set(s);t.delete(m.id);return t;}));},
@@ -39,7 +42,7 @@ export function App(){
   return <div style={{minHeight:'100vh'}}>
     <NavBar screen={current} go={go} ratedCount={n}/>
     {current==='home'&&<HomeScreen ctx={ctx}/>}
-    {current==='detail'&&<DetailScreen id={id} ctx={ctx}/>}
+    {current==='detail'&&<DetailScreen key={id} id={id} preview={preview?.id===id?preview:null} ctx={ctx}/>}
     {current==='rate'&&<RateScreen ctx={ctx}/>}
     {current==='search'&&<SearchScreen ctx={ctx}/>}
     {current==='watchlist'&&<SearchScreen ctx={ctx} mode="watchlist"/>}
@@ -50,6 +53,6 @@ export function App(){
       actions={<><Button variant="ghost" onClick={()=>setAsk(null)}>Skip</Button><Button disabled={!askVal} onClick={()=>{ctx.rate(ask,askVal);setAsk(null);}}>Save rating</Button></>}>
       <div style={{marginBottom:14}}>Your rating tunes tonight's picks.</div><StarRating value={askVal} onChange={setAskVal} size={34}/>
     </Dialog>
-    {toast&&<div style={{position:'fixed',left:'50%',bottom:24,transform:'translateX(-50%)',zIndex:200}}><Toast variant={toast.variant} action={toast.undo?'Undo':undefined} onAction={()=>{toast.undo();setToast(null);}} onClose={()=>setToast(null)}>{toast.text}</Toast></div>}
+    {toast&&<div style={{position:'fixed',left:'50%',bottom:24,transform:'translateX(-50%)',zIndex:200}}><Toast style={{animation:'wn-rise-in var(--dur-base) var(--ease-out)'}} variant={toast.variant} action={toast.undo?'Undo':undefined} onAction={()=>{toast.undo();setToast(null);}} onClose={()=>setToast(null)}>{toast.text}</Toast></div>}
   </div>;
 }

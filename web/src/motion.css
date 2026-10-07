@@ -1,0 +1,13 @@
+/* Motion follows the design system: fast and calm, ease-out, fades and short translates only. */
+@keyframes wn-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes wn-rise-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* Screen changes (View Transitions API): crossfade the page, morph the clicked poster. */
+::view-transition-old(root),::view-transition-new(root){animation-duration:320ms;animation-timing-function:cubic-bezier(.2,.8,.2,1)}
+::view-transition-group(wn-poster){animation-duration:320ms;animation-timing-function:cubic-bezier(.2,.8,.2,1)}
+::view-transition-old(wn-poster),::view-transition-new(wn-poster){height:100%;object-fit:cover}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:1ms!important;transition-duration:1ms!important}
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
+}

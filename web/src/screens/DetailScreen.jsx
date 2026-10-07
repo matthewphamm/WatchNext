@@ -1,24 +1,37 @@
-import React,{useCallback,useRef,useState} from 'react';
+import React,{useCallback,useEffect,useRef,useState} from 'react';
 import {Button,IconButton,Icon,Card,Badge,StarRating,Tag} from '../design-system/index.js';
 import {api,useApi,trailerUrl} from '../api.js';
 import {PosterRow} from './PosterRow.jsx';
-import {Backdrop,ErrorState} from './Status.jsx';
+import {Backdrop,ErrorState,PosterSkeleton} from './Status.jsx';
 
 const REASON_ICONS={similar:['star','fill','var(--accent)'],people:['users','regular','var(--text-secondary)'],genre:['film-slate','regular','var(--text-secondary)'],stats:['chart-bar','regular','var(--text-secondary)']};
 
 // The poster spans the details column (match badge to rating cards), keeping its 2:3 shape.
 const POSTER_MIN_H=240,POSTER_MAX_H=480;
 
-function DetailPoster({m,height}){
+/** Show `fallback` (already cached, e.g. the clicked card's poster) until `best` has loaded. */
+function useUpgradedSrc(best,fallback){
+  const [ready,setReady]=useState(null);
+  useEffect(()=>{
+    if(!best||!fallback||best===fallback) return;
+    const img=new Image();img.onload=()=>setReady(best);img.src=best;
+    return ()=>{img.onload=null;};
+  },[best,fallback]);
+  return !fallback||ready===best?best||fallback:fallback;
+}
+
+function DetailPoster({m,src,height}){
   const h=Math.min(POSTER_MAX_H,Math.max(POSTER_MIN_H,height||360));
-  return <div style={{width:Math.round(h*2/3),height:h,flex:'none',position:'relative',borderRadius:'var(--radius-poster)',overflow:'hidden',background:'var(--surface-raised)',border:'1px solid var(--border-hairline)',boxShadow:'var(--shadow-2)'}}>
-    {m.poster?<img src={m.poster} alt={m.title} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
+  // Shares its view-transition-name with the clicked card's poster, so the poster morphs into place.
+  return <div data-vt-poster style={{viewTransitionName:'wn-poster',width:Math.round(h*2/3),height:h,flex:'none',position:'relative',borderRadius:'var(--radius-poster)',overflow:'hidden',background:'var(--surface-raised)',border:'1px solid var(--border-hairline)',boxShadow:'var(--shadow-2)'}}>
+    {src?<img src={src} alt={m.title} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
       :<div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,padding:16,color:'var(--text-disabled)',textAlign:'center'}}><Icon name="film-slate" size={28}/><span style={{font:'700 15px/1.15 var(--font-display)',color:'var(--text-secondary)',textWrap:'balance'}}>{m.title}</span></div>}
   </div>;
 }
 
-export function DetailScreen({id,ctx}){
+export function DetailScreen({id,preview,ctx}){
   const {data,error,retry}=useApi(()=>api.movie(id,ctx),[id,ctx.ratings,ctx.dismissed]);
+  const posterSrc=useUpgradedSrc(data?.movie.poster,preview?.poster);
   const [infoHeight,setInfoHeight]=useState(null);
   const observer=useRef(null);
   const infoRef=useCallback(el=>{
@@ -27,9 +40,11 @@ export function DetailScreen({id,ctx}){
     observer.current=new ResizeObserver(([entry])=>setInfoHeight(entry.contentRect.height));
     observer.current.observe(el);
   },[]);
+  // Until details arrive, draw from the clicked card's data so the page appears instantly.
+  const m=data?.movie||preview;
   if(error&&!data) return <ErrorState message="Couldn't load this movie." onRetry={retry}/>;
-  if(!data) return <section style={{height:300,background:'var(--surface-card)',borderBottom:'1px solid var(--border-hairline)'}}/>;
-  const m=data.movie;const r=ctx.ratings[id]||0;const saved=ctx.saved.has(id);
+  if(!m) return <section style={{height:300,background:'var(--surface-card)',borderBottom:'1px solid var(--border-hairline)'}}/>;
+  const tags=m.tags||[];const r=ctx.ratings[id]||0;const saved=ctx.saved.has(id);
   return <div>
     <section style={{position:'relative',height:300,background:'var(--surface-card)',borderBottom:m.backdrop?'none':'1px solid var(--border-hairline)'}}>
       <Backdrop src={m.backdrop} labelTop={24}/>
@@ -37,12 +52,12 @@ export function DetailScreen({id,ctx}){
       <div style={{position:'absolute',left:48,top:20}}><Button variant="ghost" size="s" iconLeft="caret-left" onClick={()=>ctx.go('home')}>Back</Button></div>
     </section>
     <div style={{display:'flex',alignItems:'flex-start',gap:40,padding:'110px 48px 0',marginTop:-160,position:'relative'}}>
-      <DetailPoster m={m} height={infoHeight}/>
+      <DetailPoster m={m} src={posterSrc} height={infoHeight}/>
       <div ref={infoRef} style={{flex:1,maxWidth:720}}>
         <div style={{display:'flex',alignItems:'center',gap:8}}><Badge variant="match">{m.match}% match</Badge>{saved&&<Badge variant="success" icon="check">On watchlist</Badge>}</div>
         <h1 style={{margin:'12px 0 0',font:'800 48px/1.05 var(--font-display)',letterSpacing:'-0.02em'}}>{m.title}</h1>
         <div style={{marginTop:10,font:'500 14px/1 var(--font-body)',color:'var(--text-secondary)'}}>{[m.year,m.genres.join(', ')].filter(Boolean).join(' · ')}</div>
-        {m.tags.length>0&&<div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:18}}>{m.tags.map(t=><Tag key={t} size="s">{t}</Tag>)}</div>}
+        {tags.length>0&&<div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:18}}>{tags.map(t=><Tag key={t} size="s">{t}</Tag>)}</div>}
         <div style={{display:'flex',gap:10,marginTop:24}}>
           <Button iconLeft="play" size="l" onClick={()=>window.open(trailerUrl(m),'_blank','noopener')}>Watch trailer</Button>
           <Button variant="secondary" size="l" iconLeft={saved?'check':'plus'} onClick={()=>ctx.toggleSave(id)}>{saved?'On watchlist':'Watchlist'}</Button>
@@ -57,15 +72,16 @@ export function DetailScreen({id,ctx}){
           </Card>
           <Card>
             <div style={{font:'600 11px/1 var(--font-body)',letterSpacing:'.12em',textTransform:'uppercase',color:'var(--text-secondary)'}}>Why we picked this</div>
-            <ul style={{margin:'14px 0 0',padding:0,listStyle:'none',display:'flex',flexDirection:'column',gap:10,font:'400 14px/1.35 var(--font-body)'}}>
+            {data?<ul style={{margin:'14px 0 0',padding:0,listStyle:'none',display:'flex',flexDirection:'column',gap:10,font:'400 14px/1.35 var(--font-body)',animation:'wn-fade-in var(--dur-base) var(--ease-out)'}}>
               {data.reasons.map(x=>{const [icon,weight,color]=REASON_ICONS[x.kind]||REASON_ICONS.stats;
                 return <li key={x.text} style={{display:'flex',gap:8}}><Icon name={icon} weight={weight} size={16} color={color} style={{marginTop:1}}/>{x.text}</li>;})}
-            </ul>
+            </ul>:<div style={{display:'flex',flexDirection:'column',gap:12,marginTop:16}}>{[80,60,70].map(w=><div key={w} style={{height:12,width:w+'%',borderRadius:4,background:'var(--surface-raised)'}}/>)}</div>}
           </Card>
         </div>
       </div>
     </div>
-    <PosterRow title="More like this" movies={data.similar} ctx={ctx} size="s"/>
+    {data?<PosterRow title="More like this" movies={data.similar} ctx={ctx} size="s"/>
+      :<div style={{marginTop:40}}><PosterSkeleton count={8} width={140}/></div>}
     <div style={{height:64}}></div>
   </div>;
 }
